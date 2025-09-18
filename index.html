@@ -124,6 +124,9 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+
+  let chartInstance = null;
+
   // 🔑 Deine Firebase-Konfiguration hier einfügen
   const firebaseConfig = {
   apiKey: "AIzaSyAVWDaVdhprf2gmYqqEuZXZVWr19f-rnhQ",
@@ -199,6 +202,9 @@
 
   // Lokale Rangliste anzeigen
 async function showResults() {
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
   const snapshot = await db.collection("abstimmungen").get();
   const counts = new Array(bildDaten.length).fill(0);
 
