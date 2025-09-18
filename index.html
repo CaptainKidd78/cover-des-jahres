@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Cover des Jahres</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap');
+
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      font-family: 'Uncial Antiqua', cursive;
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 0;
+      color: #2c1e3f;
+      text-shadow: 1px 1px 2px #aaa;
+    }
+
+    h2.subtitle {
+      text-align: center;
+      font-size: 18px;
+      color: #555;
+      margin-top: 5px;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    #sizeSelector {
+      display: block;
+      margin: 20px auto;
+      font-size: 16px;
+      padding: 5px;
+    }
+
+    .gallery {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .gallery.small {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .gallery.medium {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .gallery.large {
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    }
+
+    .image-card {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .image-card label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .meta {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    #submitBtn {
+      display: block;
+      margin: 0 auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    #results {
+      margin-top: 40px;
+    }
+
+    .ranking {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Cover des Jahres</h1>
+<h2 class="subtitle">Das Schwarze Auge / Die Schwarze Katze</h2>
+
+<select id="sizeSelector">
+  <option value="small">🔍 Klein</option>
+  <option value="medium" selected>📐 Mittel</option>
+  <option value="large">🖼️ Groß</option>
+</select>
+
+<div class="gallery medium" id="gallery"></div>
+
+<button id="submitBtn">Abstimmen</button>
+
+<div id="results"></div>
+
+<!-- Firebase SDKs für klassische Webseiten -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  // 🔑 Deine Firebase-Konfiguration hier einfügen
+  const firebaseConfig = {
+  apiKey: "AIzaSyAVWDaVdhprf2gmYqqEuZXZVWr19f-rnhQ",
+  authDomain: "cover-des-jahres.firebaseapp.com",
+  projectId: "cover-des-jahres",
+  storageBucket: "cover-des-jahres.firebasestorage.app",
+  messagingSenderId: "1021819931918",
+  appId: "1:1021819931918:web:df5f509aae7a4c38371b5f"
+};
+
+  // 🔌 Firebase initialisieren
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<!-- Bilddaten laden -->
+<script src="data.js"></script>
+
+<script>
+  const gallery = document.getElementById('gallery');
+  const sizeSelector = document.getElementById('sizeSelector');
+  const voteData = [];
+
+  // Galerie aufbauen
+  bildDaten.forEach((item, index) => {
+    voteData.push({ id: index, titel: item.titel, votes: 0 });
+
+    const card = document.createElement('div');
+    card.className = 'image-card';
+    card.innerHTML = `
+      <img src="${item.coverurl}" alt="${item.titel}">
+      <label>
+        <input type="checkbox" value="${index}"> ${item.titel}
+      </label>
+      <div class="meta">🎨 ${item.artist} – 📅 ${item.monat}</div>
+    `;
+    gallery.appendChild(card);
+  });
+
+  // Bildgröße ändern
+  sizeSelector.addEventListener('change', (e) => {
+    gallery.classList.remove('small', 'medium', 'large');
+    gallery.classList.add(e.target.value);
+  });
+
+  // Abstimmen
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+    if (checked.length !== 3) {
+      alert('Bitte wähle genau 3 Bilder aus.');
+      return;
+    }
+
+    if (localStorage.getItem("abgestimmt")) {
+      alert("Du hast bereits abgestimmt.");
+      return;
+    }
+
+    const auswahl = checked.map(box => box.value);
+    try {
+      await db.collection("abstimmungen").add({
+        timestamp: new Date(),
+        auswahl: auswahl
+      });
+      localStorage.setItem("abgestimmt", "true");
+      alert("Danke für deine Stimme!");
+      showResults();
+    } catch (error) {
+      console.error("Fehler beim Speichern:", error);
+      alert("Es gab ein Problem beim Speichern deiner Stimme.");
+    }
+  });
+
+  // Lokale Rangliste anzeigen
+  function showResults() {
+    const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+    checked.forEach(box => {
+      const entry = voteData.find(i => i.id == box.value);
+      entry.votes++;
+    });
+
+    const sorted = [...voteData].sort((a, b) => b.votes - a.votes);
+    const results = document.getElementById('results');
+    results.innerHTML = '<h2>📊 Rangliste</h2>';
+    sorted.forEach((entry, index) => {
+      results.innerHTML += `
+        <div class="ranking">
+          <strong>Platz ${index + 1}:</strong> ${entry.titel} – ${entry.votes} Stimme(n)
+        </div>
+      `;
+    });
+  }
+</script>
+
+</body>
+</html>
