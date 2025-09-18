@@ -180,11 +180,13 @@
       return;
     }
 
+    //Nur einmal abstimmen, localStorage auf lokalem Rechner
+/*
     if (localStorage.getItem("abgestimmt")) {
       alert("Du hast bereits abgestimmt.");
       return;
     }
-
+*/
     const auswahl = checked.map(box => box.value);
     try {
       await db.collection("abstimmungen").add({
