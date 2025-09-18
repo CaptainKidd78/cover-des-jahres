@@ -35,6 +35,7 @@
       margin: 20px auto;
       font-size: 16px;
       padding: 5px;
+      
     }
 
     .gallery {
@@ -106,13 +107,15 @@
 <h1>Cover des Jahres</h1>
 <h2 class="subtitle">Das Schwarze Auge / Die Schwarze Katze</h2>
 
-<select id="sizeSelector">
-  <option value="small">🔍 Klein</option>
-  <option value="medium" selected>📐 Mittel</option>
-  <option value="large">🖼️ Groß</option>
+
+<select id="sizeSelector" name="groesse">
+  <option value="small" selected>🔍 Kleine Bilder</option>
+  <option value="medium" >📐 Mittlere Bilder</option>
+  <option value="large">🖼️ Große Bilder</option>
 </select>
 
-<div class="gallery medium" id="gallery"></div>
+
+<div class="gallery small" id="gallery"></div>
 
 <button id="submitBtn">Abstimmen</button>
 
